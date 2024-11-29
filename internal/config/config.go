@@ -19,7 +19,7 @@ type ServiceConfig struct {
 type DatabaseConfig struct {
 	Driver      string `envconfig:"DRIVER"`
 	Host        string `envconfig:"HOST"`
-	Port        string `envconfig:"PORT"`
+	Port        int    `envconfig:"PORT"`
 	Username    string `envconfig:"USERNAME"`
 	Password    string `envconfig:"PASSWORD"`
 	Database    string `envconfig:"DATABASE"`
@@ -56,7 +56,8 @@ func NewHttpServer() (*HttpServer, error) {
 
 func (c *DatabaseConfig) RWDataSourceName() string {
 	return fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?%s",
+		"%s://%s:%s@%s:%d/%s?%s",
+		c.Driver,
 		c.Username,
 		c.Password,
 		c.Host,

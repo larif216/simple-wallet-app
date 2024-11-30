@@ -42,8 +42,13 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 func (r *UserRepository) GetByID(tx sqlutil.DatabaseTransaction, userID uint32) (*entity.User, error) {
 	var userRecord userRecord
 
+	execer, err := sqlutil.GetExecer(r.db, tx)
+	if err != nil {
+		return nil, err
+	}
+
 	query := "SELECT id, name, balance, pending_balance, created_at, updated_at FROM users WHERE id = $1"
-	err := tx.QueryRow(
+	err = execer.QueryRow(
 		query,
 		userID,
 	).Scan(
@@ -65,8 +70,13 @@ func (r *UserRepository) GetByID(tx sqlutil.DatabaseTransaction, userID uint32) 
 }
 
 func (r *UserRepository) HoldBalance(tx sqlutil.DatabaseTransaction, userID uint32, amount decimal.Decimal) error {
+	execer, err := sqlutil.GetExecer(r.db, tx)
+	if err != nil {
+		return err
+	}
+
 	query := "UPDATE users SET balance = balance - $1, pending_balance = pending_balance + $1 WHERE id = $2"
-	result, err := tx.Exec(query, amount, userID)
+	result, err := execer.Exec(query, amount, userID)
 	if err != nil {
 		return err
 	}
@@ -84,6 +94,11 @@ func (r *UserRepository) HoldBalance(tx sqlutil.DatabaseTransaction, userID uint
 }
 
 func (r *UserRepository) ReleaseBalance(tx sqlutil.DatabaseTransaction, userID uint32, amount decimal.Decimal, withReversal bool) error {
+	execer, err := sqlutil.GetExecer(r.db, tx)
+	if err != nil {
+		return err
+	}
+
 	var query string
 	if withReversal {
 		query = "UPDATE users SET balance = balance + $1, pending_balance = pending_balance - $1 WHERE id = $2"
@@ -91,7 +106,7 @@ func (r *UserRepository) ReleaseBalance(tx sqlutil.DatabaseTransaction, userID u
 		query = "UPDATE users SET pending_balance = pending_balance - $1 WHERE id = $2"
 	}
 
-	result, err := tx.Exec(query, amount, userID)
+	result, err := execer.Exec(query, amount, userID)
 	if err != nil {
 		return err
 	}

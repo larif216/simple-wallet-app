@@ -18,11 +18,16 @@ func NewDisbursementRepository(db *sql.DB) *DisbursementRepository {
 }
 
 func (r *DisbursementRepository) Create(tx sqlutil.DatabaseTransaction, params *entity.Disbursement) error {
+	execer, err := sqlutil.GetExecer(r.db, tx)
+	if err != nil {
+		return err
+	}
+
 	query := "INSERT INTO disbursements (user_id, amount, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id"
 	now := time.Now()
 
 	var id uint32
-	err := tx.QueryRow(
+	err = execer.QueryRow(
 		query,
 		params.UserID,
 		params.Amount,
@@ -43,8 +48,13 @@ func (r *DisbursementRepository) Create(tx sqlutil.DatabaseTransaction, params *
 }
 
 func (r *DisbursementRepository) UpdateStatus(tx sqlutil.DatabaseTransaction, disbursementID uint32, status entity.DisbursementStatusEnum) error {
+	execer, err := sqlutil.GetExecer(r.db, tx)
+	if err != nil {
+		return err
+	}
+
 	query := "UPDATE disbursements SET status = $1, updated_at = NOW() WHERE id = $2"
-	result, err := tx.Exec(query, status, disbursementID)
+	result, err := execer.Exec(query, status, disbursementID)
 	if err != nil {
 		return err
 	}

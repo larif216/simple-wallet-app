@@ -1,12 +1,19 @@
 package sqlutil
 
-import "database/sql"
+import (
+	"database/sql"
+	"fmt"
+)
+
+type SQLHandle interface {
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Exec(query string, args ...interface{}) (sql.Result, error)
+}
 
 type DatabaseTransaction interface {
 	Rollback() error
 	Commit() error
-	QueryRow(query string, args ...interface{}) *sql.Row
-	Exec(query string, args ...interface{}) (sql.Result, error)
+	SQLHandle // Embedding SQLHandle interface
 }
 
 type databaseTransaction struct {
@@ -26,11 +33,7 @@ func (t *databaseTransaction) QueryRow(query string, args ...interface{}) *sql.R
 }
 
 func (t *databaseTransaction) Exec(query string, args ...interface{}) (sql.Result, error) {
-	result, err := t.tx.Exec(query, args...)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return t.tx.Exec(query, args...)
 }
 
 type databaseTransactionCreator struct {
@@ -51,4 +54,15 @@ func (s *databaseTransactionCreator) Begin() (*databaseTransaction, error) {
 
 func NewDatabaseTransactionCreator(db *sql.DB) *databaseTransactionCreator {
 	return &databaseTransactionCreator{db}
+}
+
+func GetExecer(db *sql.DB, tx DatabaseTransaction) (SQLHandle, error) {
+	if tx == nil {
+		return db, nil
+	}
+
+	if tx, ok := tx.(*databaseTransaction); ok {
+		return tx, nil
+	}
+	return nil, fmt.Errorf("DatabaseTransaction not supported")
 }

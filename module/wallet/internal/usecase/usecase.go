@@ -11,7 +11,7 @@ type WalletUsecase struct {
 	dbTransaction sqlutil.DatabaseTransactionCreator
 }
 
-func NewWalletUsecase(
+func NewWalletUseCase(
 	userRepo UserRepository,
 	disbursementRepo DisbursementRespository,
 	dbTransaction sqlutil.DatabaseTransactionCreator,

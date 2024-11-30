@@ -6,6 +6,7 @@ import (
 )
 
 func RegisterWalletHandlers(mux *http.ServeMux, config *WalletConfig) {
-	h := handler.NewWalletHandler()
+	uc := NewWalletUsecase(config)
+	h := handler.NewWalletHandler(uc)
 	mux.HandleFunc("/wallet/disburse", h.Disburse)
 }

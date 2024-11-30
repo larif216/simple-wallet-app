@@ -50,9 +50,9 @@ func (uc *WalletUsecase) Disburse(req entity.DisburseRequest) (*entity.DisburseR
 	status, err := uc.process(disbursement.UserID, disbursement.ID, disbursement.Amount)
 	if err != nil {
 		return &entity.DisburseResponse{
-			DisbursementID:     disbursement.ID,
-			DisbursementStatus: status,
-			Message:            err.Error(),
+			DisbursementID:         disbursement.ID,
+			DisbursementStatusEnum: status,
+			Message:                err.Error(),
 		}, err
 	}
 
@@ -67,13 +67,13 @@ func (uc *WalletUsecase) Disburse(req entity.DisburseRequest) (*entity.DisburseR
 	}
 
 	return &entity.DisburseResponse{
-		DisbursementID:     disbursement.ID,
-		DisbursementStatus: status,
-		Message:            message,
+		DisbursementID:         disbursement.ID,
+		DisbursementStatusEnum: status,
+		Message:                message,
 	}, nil
 }
 
-func (uc *WalletUsecase) process(userID, disbursementID uint32, amount decimal.Decimal) (entity.DisbursementStatus, error) {
+func (uc *WalletUsecase) process(userID, disbursementID uint32, amount decimal.Decimal) (entity.DisbursementStatusEnum, error) {
 	status := entity.DisbursementStatusPending
 
 	tx, err := uc.dbTransaction.Begin()
@@ -86,27 +86,39 @@ func (uc *WalletUsecase) process(userID, disbursementID uint32, amount decimal.D
 		}
 	}()
 
-	// mocking purposes, to simulate success and failed scenario
-	intPart := amount.IntPart()
-	if intPart%2 == 0 {
-		err = uc.userRepo.ReleaseBalance(tx, userID, amount, true)
-		if err != nil {
-			return status, err
-		}
+	// mocking purposes, to simulate success, pending, and failed scenario
+	lastDigit := amount.IntPart() % 10
 
-		status = entity.DisbursementStatusSuccess
-	} else {
+	switch lastDigit {
+	case 1:
+		// failed case
 		err = uc.userRepo.ReleaseBalance(tx, userID, amount, true)
 		if err != nil {
 			return status, err
 		}
 
 		status = entity.DisbursementStatusFailed
-	}
 
-	err = uc.disbursementRepo.UpdateStatus(tx, disbursementID, status)
-	if err != nil {
-		return status, err
+		err = uc.disbursementRepo.UpdateStatus(tx, disbursementID, status)
+		if err != nil {
+			return status, err
+		}
+	case 2:
+		// pending case
+		status = entity.DisbursementStatusPending
+	default:
+		// success case
+		err = uc.userRepo.ReleaseBalance(tx, userID, amount, false)
+		if err != nil {
+			return status, err
+		}
+
+		status = entity.DisbursementStatusSuccess
+
+		err = uc.disbursementRepo.UpdateStatus(tx, disbursementID, status)
+		if err != nil {
+			return status, err
+		}
 	}
 
 	err = tx.Commit()

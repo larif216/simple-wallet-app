@@ -19,18 +19,18 @@ type Disbursement struct {
 	ID        uint32
 	UserID    uint32
 	Amount    decimal.Decimal
-	Status    DisbursementStatus
+	Status    DisbursementStatusEnum
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
 type DisburseRequest struct {
-	UserID uint32
-	Amount decimal.Decimal
+	UserID uint32          `json:"user_id"`
+	Amount decimal.Decimal `json:"amount"`
 }
 
 type DisburseResponse struct {
-	DisbursementID     uint32
-	DisbursementStatus DisbursementStatus
-	Message            string
+	DisbursementID         uint32
+	DisbursementStatusEnum DisbursementStatusEnum
+	Message                string
 }

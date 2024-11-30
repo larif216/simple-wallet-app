@@ -42,7 +42,7 @@ func (r *DisbursementRepository) Create(tx sqlutil.DatabaseTransaction, params *
 	return nil
 }
 
-func (r *DisbursementRepository) UpdateStatus(tx sqlutil.DatabaseTransaction, disbursementID uint32, status entity.DisbursementStatus) error {
+func (r *DisbursementRepository) UpdateStatus(tx sqlutil.DatabaseTransaction, disbursementID uint32, status entity.DisbursementStatusEnum) error {
 	query := "UPDATE disbursements SET status = $1, updated_at = NOW() WHERE id = $2"
 	result, err := tx.Exec(query, status, disbursementID)
 	if err != nil {

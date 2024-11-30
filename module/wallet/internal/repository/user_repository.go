@@ -43,9 +43,19 @@ func (r *UserRepository) GetByID(tx sqlutil.DatabaseTransaction, userID uint32) 
 	var userRecord userRecord
 
 	query := "SELECT id, name, balance, pending_balance, created_at, updated_at FROM users WHERE id = $1"
-	err := tx.QueryRow(query, userID).Scan(&userRecord)
+	err := tx.QueryRow(
+		query,
+		userID,
+	).Scan(
+		&userRecord.ID,
+		&userRecord.Name,
+		&userRecord.Balance,
+		&userRecord.PendingBalance,
+		&userRecord.CreatedAt,
+		&userRecord.UpdatedAt,
+	)
 	if err != nil {
-		if err != sql.ErrNoRows {
+		if err == sql.ErrNoRows {
 			return nil, entity.ErrUserNotFound
 		}
 		return nil, err

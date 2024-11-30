@@ -15,5 +15,9 @@ type UserRepository interface {
 
 type DisbursementRespository interface {
 	Create(tx sqlutil.DatabaseTransaction, params *entity.Disbursement) error
-	UpdateStatus(tx sqlutil.DatabaseTransaction, disbursementID uint32, status entity.DisbursementStatus) error
+	UpdateStatus(tx sqlutil.DatabaseTransaction, disbursementID uint32, status entity.DisbursementStatusEnum) error
+}
+
+type WalletUsecases interface {
+	Disburse(req entity.DisburseRequest) (*entity.DisburseResponse, error)
 }

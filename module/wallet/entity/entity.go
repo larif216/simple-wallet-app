@@ -23,3 +23,14 @@ type Disbursement struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
+
+type DisburseRequest struct {
+	UserID uint32
+	Amount decimal.Decimal
+}
+
+type DisburseResponse struct {
+	DisbursementID     uint32
+	DisbursementStatus DisbursementStatus
+	Message            string
+}

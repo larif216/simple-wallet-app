@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"simple-wallet-app/internal/sqlutil"
 	"simple-wallet-app/module/wallet/entity"
 	"time"
 )
@@ -16,7 +17,7 @@ func NewDisbursementRepository(db *sql.DB) *DisbursementRepository {
 	}
 }
 
-func (r *DisbursementRepository) Create(tx *sql.Tx, params *entity.Disbursement) error {
+func (r *DisbursementRepository) Create(tx sqlutil.DatabaseTransaction, params *entity.Disbursement) error {
 	query := "INSERT INTO disbursements (user_id, amount, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5) RETURNING id"
 	now := time.Now()
 
@@ -41,7 +42,7 @@ func (r *DisbursementRepository) Create(tx *sql.Tx, params *entity.Disbursement)
 	return nil
 }
 
-func (r *DisbursementRepository) UpdateStatus(tx *sql.Tx, disbursementID uint32, status entity.DisbursementStatus) error {
+func (r *DisbursementRepository) UpdateStatus(tx sqlutil.DatabaseTransaction, disbursementID uint32, status entity.DisbursementStatus) error {
 	query := "UPDATE disbursements SET status = $1, updated_at = NOW() WHERE id = $2"
 	result, err := tx.Exec(query, status, disbursementID)
 	if err != nil {

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"simple-wallet-app/internal/sqlutil"
 	"simple-wallet-app/module/wallet/entity"
 	"time"
 
@@ -38,7 +39,7 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	}
 }
 
-func (r *UserRepository) GetByID(tx *sql.Tx, userID uint32) (*entity.User, error) {
+func (r *UserRepository) GetByID(tx sqlutil.DatabaseTransaction, userID uint32) (*entity.User, error) {
 	var userRecord userRecord
 
 	query := "SELECT id, name, balance, pending_balance, created_at, updated_at FROM users WHERE id = $1"
@@ -53,7 +54,7 @@ func (r *UserRepository) GetByID(tx *sql.Tx, userID uint32) (*entity.User, error
 	return userRecord.toEntity(), nil
 }
 
-func (r *UserRepository) HoldBalance(tx *sql.Tx, userID uint32, amount decimal.Decimal) error {
+func (r *UserRepository) HoldBalance(tx sqlutil.DatabaseTransaction, userID uint32, amount decimal.Decimal) error {
 	query := "UPDATE users SET balance = balance - $1, pending_balance = pending_balance + $1 WHERE id = $2"
 	result, err := tx.Exec(query, amount, userID)
 	if err != nil {
@@ -72,7 +73,7 @@ func (r *UserRepository) HoldBalance(tx *sql.Tx, userID uint32, amount decimal.D
 	return nil
 }
 
-func (r *UserRepository) ReleaseBalance(tx *sql.Tx, userID uint32, amount decimal.Decimal, withReversal bool) error {
+func (r *UserRepository) ReleaseBalance(tx sqlutil.DatabaseTransaction, userID uint32, amount decimal.Decimal, withReversal bool) error {
 	var query string
 	if withReversal {
 		query = "UPDATE users SET balance = balance + $1, pending_balance = pending_balance - $1 WHERE id = $2"

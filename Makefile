@@ -31,3 +31,8 @@ migrate: tool-migrate
 	@bin/migrate -database "postgres://$(POSTGRES_USER):$(POSTGRES_PASS)@$(POSTGRES_DB_HOST):$(POSTGRES_DB_PORT)/$(POSTGRES_DB_NAME)?sslmode=disable" \
 	-path $(TMP_DIR) \
 	$(MIGRATE_ARGS)
+
+seed:
+	@$(foreach module, $(MODULES), \
+		cp module/$(module)/db/migrations/seeds/*.sql $(TMP_DIR) 2>/dev/null;)
+	@PGPASSWORD=$(POSTGRES_PASS) psql -U $(POSTGRES_USER) -h $(POSTGRES_DB_HOST) -p $(POSTGRES_DB_PORT) -d $(POSTGRES_DB_NAME) -f $(TMP_DIR)/*.sql
